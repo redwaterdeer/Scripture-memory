@@ -556,20 +556,25 @@
       }
 
       function closeShortcutWindow() {
+        var from = "";
         try {
-          window.open("", "_self");
-          window.close();
+          from = new URLSearchParams(location.search).get("from") || "";
         } catch {
-          /* ignore */
+          from = "";
         }
-        setTimeout(function () {
+        var appUrl = "";
+        if (from === "kakaotalk") appUrl = "kakaotalk://";
+        else if (from === "youtube") appUrl = "youtube://";
+        if (!appUrl) {
           try {
+            window.open("", "_self");
             window.close();
           } catch {
             /* ignore */
           }
-          location.replace("about:blank");
-        }, 0);
+          return;
+        }
+        location.replace(appUrl);
       }
 
       const UNLOCK_KEY = "bibleShowVerseOnReturn";
@@ -732,6 +737,9 @@
         popupEditBtn.hidden = true;
         popupEditBtn.style.display = "none";
         popupEditBtn.remove();
+        amenBtn.hidden = true;
+        amenBtn.style.display = "none";
+        amenBtn.remove();
         showVerseScreen();
       } else {
         showHome();
