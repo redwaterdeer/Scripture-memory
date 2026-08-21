@@ -392,8 +392,7 @@
       let applyingRemote = false;
       let gunNode = null;
       let lastTick = Date.now();
-      const startedAt = Date.now();
-      let wasHidden = document.hidden === true || document.webkitHidden === true;
+      let freezeReady = false;
 
       function toTime(value) {
         const n = Number(value);
@@ -501,6 +500,7 @@
       function showHome() {
         showScreen("home");
         screenVerse.hidden = true;
+        screenVerse.style.display = "none";
       }
 
       function showVerseScreen() {
@@ -512,16 +512,36 @@
           renderVerse();
         }
         showScreen("verse");
+        screenVerse.removeAttribute("hidden");
+        screenVerse.style.display = "-webkit-flex";
+        screenVerse.style.display = "flex";
+        screenVerse.style.zIndex = "9999";
       }
 
-      function isPageHidden() {
-        return document.hidden === true || document.webkitHidden === true;
+      const UNLOCK_KEY = "bibleShowVerseOnReturn";
+
+      function markLeftApp() {
+        try {
+          localStorage.setItem(UNLOCK_KEY, "1");
+        } catch {
+          /* ignore */
+        }
       }
 
-      function onLockUnlock() {
-        if (Date.now() - startedAt < 2500) return;
+      function showVerseAfterUnlock() {
         if (currentScreen === "login" || currentScreen === "edit") return;
-        if (currentScreen !== "home") return;
+        var need = false;
+        try {
+          need = localStorage.getItem(UNLOCK_KEY) === "1";
+        } catch {
+          need = false;
+        }
+        if (!need) return;
+        try {
+          localStorage.removeItem(UNLOCK_KEY);
+        } catch {
+          /* ignore */
+        }
         showVerseScreen();
       }
 
@@ -626,32 +646,32 @@
         /* ignore */
       }
 
+      function isPageHidden() {
+        return document.hidden === true || document.webkitHidden === true;
+      }
+
+      window.addEventListener("pagehide", markLeftApp);
+      window.addEventListener("blur", markLeftApp);
+      window.addEventListener("freeze", markLeftApp);
       document.addEventListener("visibilitychange", function () {
-        const hidden = isPageHidden();
-        if (hidden) {
-          wasHidden = true;
-          return;
-        }
-        if (wasHidden) {
-          wasHidden = false;
-          onLockUnlock();
-        }
+        if (isPageHidden()) markLeftApp();
+        else showVerseAfterUnlock();
       });
       document.addEventListener("webkitvisibilitychange", function () {
-        const hidden = isPageHidden();
-        if (hidden) {
-          wasHidden = true;
-          return;
-        }
-        if (wasHidden) {
-          wasHidden = false;
-          onLockUnlock();
-        }
+        if (isPageHidden()) markLeftApp();
+        else showVerseAfterUnlock();
       });
+      window.addEventListener("pageshow", showVerseAfterUnlock);
+      window.addEventListener("focus", showVerseAfterUnlock);
+      document.addEventListener("resume", showVerseAfterUnlock);
 
       function watchFreeze() {
-        const now = Date.now();
-        if (now - lastTick > 1500) onLockUnlock();
+        var now = Date.now();
+        if (freezeReady && now - lastTick > 2000) {
+          markLeftApp();
+          showVerseAfterUnlock();
+        }
+        freezeReady = true;
         lastTick = now;
         requestAnimationFrame(watchFreeze);
       }
