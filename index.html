@@ -11,6 +11,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="성경암송" />
+    <meta name="application-name" content="성경암송" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png" />
     <title>성경암송</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" />
     <link
@@ -44,6 +49,11 @@
         padding: 0;
       }
 
+      html {
+        height: 100%;
+        height: -webkit-fill-available;
+      }
+
       html,
       body {
         width: 100%;
@@ -55,6 +65,10 @@
       body {
         position: fixed;
         inset: 0;
+        min-height: 100%;
+        min-height: 100vh;
+        min-height: 100dvh;
+        min-height: -webkit-fill-available;
         display: flex;
         justify-content: center;
         background: #1a1a1a;
@@ -73,6 +87,8 @@
         width: 100%;
         max-width: var(--phone-max);
         height: 100%;
+        min-height: 100%;
+        min-height: 100dvh;
         position: relative;
         overflow: hidden;
         background: linear-gradient(180deg, #7a2a22 0%, var(--wine) 42%, var(--wine-deep) 100%);
@@ -122,6 +138,10 @@
         align-items: center;
         justify-content: center;
         padding: 24px 18px;
+      }
+
+      #versePopup {
+        z-index: 50;
       }
 
       .popup[hidden] {
@@ -286,10 +306,12 @@
       >
         <div class="popup-backdrop" aria-hidden="true"></div>
         <div class="popup-panel">
-          <p class="verse-text" id="verseText"></p>
-          <p class="verse-ref" id="verseRef"></p>
+          <p class="verse-text" id="verseText">
+            내가 너희에게 이르노니 이와 같이 죄인 하나가 회개하면 하늘에서는 회개할 것 없는 의인 아흔 아홉을 인하여 기뻐하는 것보다 더하리라
+          </p>
+          <p class="verse-ref" id="verseRef">- 누가복음 15장 7절 말씀 -</p>
           <button type="button" class="btn btn-primary" id="amenBtn">아멘</button>
-          <button type="button" class="btn btn-secondary" id="popupEditBtn" hidden>
+          <button type="button" class="btn btn-secondary" id="popupEditBtn">
             수정
           </button>
         </div>
@@ -352,7 +374,6 @@
       </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script>
       const MASTER_ACCOUNT = {
         id: "redwaterdeer",
@@ -400,6 +421,7 @@
       let currentVerse = { ...DEFAULT_VERSE };
       let applyingRemote = false;
       let gunNode = null;
+      let loginFromVerse = false;
 
       function toTime(value) {
         const n = Number(value);
@@ -433,11 +455,15 @@
           text: String(verse.text || "").trim() || DEFAULT_VERSE.text,
           ref: String(verse.ref || "").trim() || DEFAULT_VERSE.ref,
         };
-        localStorage.setItem(VERSE_KEY, JSON.stringify(currentVerse));
-        localStorage.setItem(
-          VERSE_META_KEY,
-          JSON.stringify({ updatedAt: toTime(updatedAt) || Date.now() })
-        );
+        try {
+          localStorage.setItem(VERSE_KEY, JSON.stringify(currentVerse));
+          localStorage.setItem(
+            VERSE_META_KEY,
+            JSON.stringify({ updatedAt: toTime(updatedAt) || Date.now() })
+          );
+        } catch {
+          /* ignore */
+        }
         return currentVerse;
       }
 
@@ -506,29 +532,31 @@
         if (!node) return;
 
         node.on((data) => {
-          if (isRecentLocalSave(8000)) return;
-          if (!data || typeof data.json !== "string") return;
-
-          const remoteAt = toTime(data.updatedAt);
-          const localAt = toTime(readMeta().updatedAt);
-          if (!remoteAt || remoteAt <= localAt) return;
-
-          let remoteVerse;
           try {
-            remoteVerse = JSON.parse(data.json);
-          } catch {
-            return;
-          }
-          if (!remoteVerse || typeof remoteVerse !== "object") return;
+            if (isRecentLocalSave(8000)) return;
+            if (!data || typeof data.json !== "string") return;
 
-          applyingRemote = true;
-          try {
+            const remoteAt = toTime(data.updatedAt);
+            const localAt = toTime(readMeta().updatedAt);
+            if (!remoteAt || remoteAt <= localAt) return;
+
+            let remoteVerse;
+            try {
+              remoteVerse = JSON.parse(data.json);
+            } catch {
+              return;
+            }
+            if (!remoteVerse || typeof remoteVerse !== "object") return;
+
+            applyingRemote = true;
             writeLocal(remoteVerse, remoteAt);
             renderVerse();
             if (!editPopup.hidden) {
               editVerse.value = currentVerse.text;
               editRef.value = currentVerse.ref;
             }
+          } catch {
+            /* ignore */
           } finally {
             applyingRemote = false;
           }
@@ -544,12 +572,20 @@
       }
 
       function isLoggedIn() {
-        return sessionStorage.getItem(SESSION_KEY) === "1";
+        try {
+          return sessionStorage.getItem(SESSION_KEY) === "1";
+        } catch {
+          return false;
+        }
       }
 
       function setLoggedIn(value) {
-        if (value) sessionStorage.setItem(SESSION_KEY, "1");
-        else sessionStorage.removeItem(SESSION_KEY);
+        try {
+          if (value) sessionStorage.setItem(SESSION_KEY, "1");
+          else sessionStorage.removeItem(SESSION_KEY);
+        } catch {
+          /* ignore */
+        }
       }
 
       function renderVerse() {
@@ -561,7 +597,16 @@
         const loggedIn = isLoggedIn();
         guestActions.hidden = loggedIn;
         masterActions.hidden = !loggedIn;
-        popupEditBtn.hidden = !loggedIn;
+      }
+
+      function openLogin(fromVerse) {
+        loginFromVerse = !!fromVerse;
+        loginMsg.textContent = "";
+        loginId.value = "";
+        loginPw.value = "";
+        if (fromVerse) versePopup.hidden = true;
+        loginPopup.hidden = false;
+        loginId.focus();
       }
 
       function unlockField(event) {
@@ -578,28 +623,63 @@
         editVerse.focus();
       }
 
-      currentVerse = loadCachedVerse();
-      renderVerse();
-      renderAuth();
-      subscribeSharedVerse();
+      function showVersePopup() {
+        if (!editPopup.hidden || !loginPopup.hidden) return;
+        try {
+          currentVerse = loadCachedVerse();
+          renderVerse();
+        } catch {
+          currentVerse = { ...DEFAULT_VERSE };
+          verseTextEl.textContent = currentVerse.text;
+          verseRefEl.textContent = currentVerse.ref;
+        }
+        versePopup.hidden = false;
+      }
+
+      function loadGunAndSync() {
+        if (typeof Gun !== "undefined") {
+          try {
+            subscribeSharedVerse();
+          } catch {
+            /* ignore */
+          }
+          return;
+        }
+
+        const script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/npm/gun/gun.js";
+        script.async = true;
+        script.onload = () => {
+          try {
+            subscribeSharedVerse();
+          } catch {
+            /* ignore */
+          }
+        };
+        document.head.appendChild(script);
+      }
+
+      showVersePopup();
+      try {
+        renderAuth();
+      } catch {
+        /* ignore */
+      }
+      window.addEventListener("pageshow", showVersePopup);
+      setTimeout(loadGunAndSync, 0);
 
       amenBtn.addEventListener("click", () => {
         versePopup.hidden = true;
       });
 
-      popupEditBtn.addEventListener("click", openEdit);
+      popupEditBtn.addEventListener("click", () => openLogin(true));
       openEditBtn.addEventListener("click", openEdit);
 
-      openLoginBtn.addEventListener("click", () => {
-        loginMsg.textContent = "";
-        loginId.value = "";
-        loginPw.value = "";
-        loginPopup.hidden = false;
-        loginId.focus();
-      });
+      openLoginBtn.addEventListener("click", () => openLogin(false));
 
       loginCancelBtn.addEventListener("click", () => {
         loginPopup.hidden = true;
+        if (loginFromVerse) versePopup.hidden = false;
       });
 
       loginId.addEventListener("focus", unlockField);
