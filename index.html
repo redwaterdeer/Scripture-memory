@@ -623,8 +623,8 @@
         editVerse.focus();
       }
 
-      function showVersePopup() {
-        if (!editPopup.hidden || !loginPopup.hidden) return;
+      function showVersePopup(force) {
+        if (!force && (!editPopup.hidden || !loginPopup.hidden)) return;
         try {
           currentVerse = loadCachedVerse();
           renderVerse();
@@ -633,6 +633,8 @@
           verseTextEl.textContent = currentVerse.text;
           verseRefEl.textContent = currentVerse.ref;
         }
+        loginPopup.hidden = true;
+        editPopup.hidden = true;
         versePopup.hidden = false;
       }
 
@@ -708,7 +710,7 @@
       });
 
       editCancelBtn.addEventListener("click", () => {
-        editPopup.hidden = true;
+        showVersePopup(true);
       });
 
       editForm.addEventListener("submit", async (event) => {
