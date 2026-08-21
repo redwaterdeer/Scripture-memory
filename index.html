@@ -623,13 +623,16 @@
         editRef.value = currentVerse.ref;
         editMsg.textContent = "";
         loginPopup.hidden = true;
-        hideVersePopup(true);
+        hideVersePopup();
         editPopup.hidden = false;
         editVerse.focus();
       }
 
-      let dismissedAt = 0;
       let lastHeartbeat = Date.now();
+      let lastRaf = Date.now();
+      let rafReady = false;
+      let screenWasLocked = false;
+      let lastHidden = !!(document.hidden || document.webkitHidden);
 
       function isHomeScreen() {
         return editPopup.hidden && loginPopup.hidden;
@@ -648,10 +651,10 @@
         versePopup.hidden = false;
         versePopup.classList.add("is-open");
         versePopup.style.display = "flex";
+        versePopup.removeAttribute("hidden");
       }
 
-      function hideVersePopup(silent) {
-        if (!silent) dismissedAt = Date.now();
+      function hideVersePopup() {
         versePopup.hidden = true;
         versePopup.classList.remove("is-open");
         versePopup.style.display = "none";
@@ -661,6 +664,30 @@
         loginPopup.hidden = true;
         editPopup.hidden = true;
         showVersePopup();
+      }
+
+      function onAppWake() {
+        showHomeScreen();
+      }
+
+      function watchRaf() {
+        const now = Date.now();
+        if (rafReady && now - lastRaf > 700) onAppWake();
+        rafReady = true;
+        lastRaf = now;
+        requestAnimationFrame(watchRaf);
+      }
+
+      async function probeScreenLock() {
+        if (!navigator.wakeLock || typeof navigator.wakeLock.request !== "function") return;
+        try {
+          const lock = await navigator.wakeLock.request("screen");
+          if (screenWasLocked) onAppWake();
+          screenWasLocked = false;
+          if (lock && lock.release) await lock.release();
+        } catch {
+          screenWasLocked = true;
+        }
       }
 
       function loadGunAndSync() {
@@ -693,30 +720,53 @@
         /* ignore */
       }
 
-      window.addEventListener("pageshow", showHomeScreen);
-      window.addEventListener("load", showHomeScreen);
-      window.addEventListener("focus", showHomeScreen);
+      window.addEventListener("pageshow", onAppWake);
+      window.addEventListener("load", onAppWake);
+      window.addEventListener("focus", onAppWake);
+      window.addEventListener("blur", () => {
+        lastHeartbeat = 0;
+        lastRaf = 0;
+      });
       window.addEventListener("pagehide", () => {
         lastHeartbeat = 0;
+        lastRaf = 0;
       });
       document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible") showHomeScreen();
-        else lastHeartbeat = 0;
+        const hidden = document.hidden;
+        if (lastHidden && !hidden) onAppWake();
+        if (!hidden) onAppWake();
+        lastHidden = hidden;
+        if (hidden) {
+          lastHeartbeat = 0;
+          lastRaf = 0;
+        }
       });
       document.addEventListener("webkitvisibilitychange", () => {
-        if (document.webkitVisibilityState === "visible") showHomeScreen();
-        else lastHeartbeat = 0;
+        if (document.webkitVisibilityState === "visible") onAppWake();
+        else {
+          lastHeartbeat = 0;
+          lastRaf = 0;
+        }
       });
-      document.addEventListener("resume", showHomeScreen);
+      document.addEventListener("resume", onAppWake);
       document.addEventListener("freeze", () => {
         lastHeartbeat = 0;
+        lastRaf = 0;
       });
+
+      requestAnimationFrame(watchRaf);
 
       setInterval(() => {
         const now = Date.now();
+        const hidden = !!(document.hidden || document.webkitHidden);
+        if (lastHidden && !hidden) onAppWake();
+        lastHidden = hidden;
+
         const gap = now - lastHeartbeat;
         lastHeartbeat = now;
-        if (gap > 1500 && isHomeScreen()) showHomeScreen();
+        if (gap > 700) onAppWake();
+
+        probeScreenLock();
       }, 400);
 
       setTimeout(loadGunAndSync, 0);
