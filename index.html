@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#5c1a16" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="성경암송" />
+    <title>성경암송</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --phone-max: 430px;
+        --wine: #5c1a16;
+        --wine-deep: #3d100e;
+        --cream: #f7f0e4;
+        --paper: #fffaf1;
+        --ink: #2c1a14;
+        --muted: #6b4a3a;
+        --font-ui: "Pretendard", "Apple SD Gothic Neo", sans-serif;
+        --font-verse: "Noto Serif KR", "Batang", serif;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none;
+      }
+
+      body {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        justify-content: center;
+        background: #1a1a1a;
+        font-family: var(--font-ui);
+        -webkit-font-smoothing: antialiased;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      button,
+      input,
+      textarea {
+        font-family: var(--font-ui);
+      }
+
+      .phone {
+        width: 100%;
+        max-width: var(--phone-max);
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(180deg, #7a2a22 0%, var(--wine) 42%, var(--wine-deep) 100%);
+        color: var(--cream);
+      }
+
+      .home {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 28px 40px;
+        text-align: center;
+      }
+
+      .home h1 {
+        font-family: var(--font-verse);
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+      }
+
+      .home-sub {
+        margin-top: 12px;
+        font-size: 0.95rem;
+        opacity: 0.78;
+      }
+
+      .home-actions {
+        margin-top: 48px;
+        width: min(100%, 280px);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .home-actions[hidden] {
+        display: none !important;
+      }
+
+      .popup {
+        position: absolute;
+        inset: 0;
+        z-index: 40;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 18px;
+      }
+
+      .popup[hidden] {
+        display: none !important;
+      }
+
+      .popup-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(20, 8, 6, 0.62);
+        backdrop-filter: blur(4px);
+      }
+
+      .popup-panel {
+        position: relative;
+        width: min(100%, 360px);
+        max-height: 90%;
+        overflow-y: auto;
+        padding: 36px 26px 28px;
+        border-radius: 18px;
+        background: var(--paper);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+        text-align: center;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .popup-title {
+        margin-bottom: 18px;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--ink);
+        letter-spacing: 0.06em;
+      }
+
+      .verse-text {
+        font-family: var(--font-verse);
+        font-size: 1.05rem;
+        font-weight: 600;
+        line-height: 1.85;
+        color: var(--ink);
+        word-break: keep-all;
+      }
+
+      .verse-ref {
+        margin-top: 22px;
+        font-family: var(--font-verse);
+        font-size: 0.92rem;
+        color: var(--muted);
+      }
+
+      .btn {
+        display: block;
+        width: 100%;
+        padding: 14px 16px;
+        border: 0;
+        border-radius: 999px;
+        font-size: 1.05rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        margin-top: 28px;
+        background: linear-gradient(180deg, #b42318 0%, #8e1b14 100%);
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(142, 27, 20, 0.28);
+      }
+
+      .btn-secondary {
+        margin-top: 10px;
+        background: #efe4d4;
+        color: var(--ink);
+      }
+
+      .btn-ghost {
+        margin-top: 8px;
+        background: transparent;
+        color: var(--cream);
+        border: 1px solid rgba(247, 240, 228, 0.35);
+      }
+
+      .btn:active {
+        transform: scale(0.98);
+      }
+
+      .field {
+        margin-top: 14px;
+        text-align: left;
+      }
+
+      .field label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      .field input,
+      .field textarea {
+        width: 100%;
+        border: 1px solid #e4d5c3;
+        border-radius: 12px;
+        background: #fff;
+        color: var(--ink);
+        font-size: 1rem;
+        padding: 12px 14px;
+        outline: none;
+      }
+
+      .field textarea {
+        min-height: 140px;
+        resize: none;
+        font-family: var(--font-verse);
+        line-height: 1.7;
+      }
+
+      .field input:focus,
+      .field textarea:focus {
+        border-color: #b42318;
+      }
+
+      .form-msg {
+        min-height: 1.2em;
+        margin-top: 10px;
+        font-size: 0.85rem;
+        color: #b42318;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="phone">
+      <main class="home">
+        <h1>성경암송</h1>
+        <p class="home-sub">말씀을 마음에 새기는 시간</p>
+
+        <div class="home-actions" id="guestActions">
+          <button type="button" class="btn btn-ghost" id="openLoginBtn">관리자 로그인</button>
+        </div>
+
+        <div class="home-actions" id="masterActions" hidden>
+          <button type="button" class="btn btn-ghost" id="openEditBtn">팝업 말씀 수정</button>
+          <button type="button" class="btn btn-ghost" id="logoutBtn">로그아웃</button>
+        </div>
+      </main>
+
+      <div
+        class="popup"
+        id="versePopup"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="verseText"
+      >
+        <div class="popup-backdrop" aria-hidden="true"></div>
+        <div class="popup-panel">
+          <p class="verse-text" id="verseText"></p>
+          <p class="verse-ref" id="verseRef"></p>
+          <button type="button" class="btn btn-primary" id="amenBtn">아멘</button>
+          <button type="button" class="btn btn-secondary" id="popupEditBtn" hidden>
+            수정
+          </button>
+        </div>
+      </div>
+
+      <div class="popup" id="loginPopup" hidden role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+        <div class="popup-backdrop" aria-hidden="true"></div>
+        <div class="popup-panel">
+          <h2 class="popup-title" id="loginTitle">마스터 로그인</h2>
+          <form id="loginForm" autocomplete="off">
+            <div class="field">
+              <label for="loginId">아이디</label>
+              <input
+                id="loginId"
+                name="verse-master-id"
+                type="text"
+                inputmode="text"
+                autocomplete="off"
+                autocapitalize="off"
+                autocorrect="off"
+                spellcheck="false"
+                readonly
+              />
+            </div>
+            <div class="field">
+              <label for="loginPw">비밀번호</label>
+              <input
+                id="loginPw"
+                name="verse-master-pw"
+                type="password"
+                autocomplete="new-password"
+                readonly
+              />
+            </div>
+            <p class="form-msg" id="loginMsg" aria-live="polite"></p>
+            <button type="submit" class="btn btn-primary">로그인</button>
+            <button type="button" class="btn btn-secondary" id="loginCancelBtn">취소</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="popup" id="editPopup" hidden role="dialog" aria-modal="true" aria-labelledby="editTitle">
+        <div class="popup-backdrop" aria-hidden="true"></div>
+        <div class="popup-panel">
+          <h2 class="popup-title" id="editTitle">팝업 말씀 수정</h2>
+          <form id="editForm" autocomplete="off">
+            <div class="field">
+              <label for="editVerse">말씀</label>
+              <textarea id="editVerse" required></textarea>
+            </div>
+            <div class="field">
+              <label for="editRef">출처</label>
+              <input id="editRef" type="text" required />
+            </div>
+            <p class="form-msg" id="editMsg" aria-live="polite"></p>
+            <button type="submit" class="btn btn-primary">저장</button>
+            <button type="button" class="btn btn-secondary" id="editCancelBtn">닫기</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <script>
+      const MASTER_ACCOUNT = {
+        id: "redwaterdeer",
+        password: "10qp29wo!Q",
+      };
+
+      const VERSE_KEY = "biblePopupVerse";
+      const VERSE_META_KEY = "biblePopupVerseMeta";
+      const SESSION_KEY = "bibleMasterLoggedIn";
+      const LOCAL_SAVE_GUARD_KEY = "biblePopupLocalSaveAt";
+      const APP_ROOT = "bible-amsong-redwaterdeer-popup-v1";
+      const GUN_PEERS = [
+        "https://gun-manhattan.herokuapp.com/gun",
+        "https://peer.wallie.io/gun",
+      ];
+
+      const DEFAULT_VERSE = {
+        text: "내가 너희에게 이르노니 이와 같이 죄인 하나가 회개하면 하늘에서는 회개할 것 없는 의인 아흔 아홉을 인하여 기뻐하는 것보다 더하리라",
+        ref: "- 누가복음 15장 7절 말씀 -",
+      };
+
+      const versePopup = document.getElementById("versePopup");
+      const loginPopup = document.getElementById("loginPopup");
+      const editPopup = document.getElementById("editPopup");
+      const verseTextEl = document.getElementById("verseText");
+      const verseRefEl = document.getElementById("verseRef");
+      const amenBtn = document.getElementById("amenBtn");
+      const popupEditBtn = document.getElementById("popupEditBtn");
+      const guestActions = document.getElementById("guestActions");
+      const masterActions = document.getElementById("masterActions");
+      const openLoginBtn = document.getElementById("openLoginBtn");
+      const openEditBtn = document.getElementById("openEditBtn");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const loginForm = document.getElementById("loginForm");
+      const loginId = document.getElementById("loginId");
+      const loginPw = document.getElementById("loginPw");
+      const loginMsg = document.getElementById("loginMsg");
+      const loginCancelBtn = document.getElementById("loginCancelBtn");
+      const editForm = document.getElementById("editForm");
+      const editVerse = document.getElementById("editVerse");
+      const editRef = document.getElementById("editRef");
+      const editMsg = document.getElementById("editMsg");
+      const editCancelBtn = document.getElementById("editCancelBtn");
+
+      let currentVerse = { ...DEFAULT_VERSE };
+      let applyingRemote = false;
+      let gunNode = null;
+
+      function toTime(value) {
+        const n = Number(value);
+        return Number.isFinite(n) && n > 0 ? n : 0;
+      }
+
+      function readMeta() {
+        try {
+          return JSON.parse(localStorage.getItem(VERSE_META_KEY) || "{}");
+        } catch {
+          return {};
+        }
+      }
+
+      function loadCachedVerse() {
+        try {
+          const raw = localStorage.getItem(VERSE_KEY);
+          if (!raw) return { ...DEFAULT_VERSE };
+          const data = JSON.parse(raw);
+          return {
+            text: String(data.text || "").trim() || DEFAULT_VERSE.text,
+            ref: String(data.ref || "").trim() || DEFAULT_VERSE.ref,
+          };
+        } catch {
+          return { ...DEFAULT_VERSE };
+        }
+      }
+
+      function writeLocal(verse, updatedAt) {
+        currentVerse = {
+          text: String(verse.text || "").trim() || DEFAULT_VERSE.text,
+          ref: String(verse.ref || "").trim() || DEFAULT_VERSE.ref,
+        };
+        localStorage.setItem(VERSE_KEY, JSON.stringify(currentVerse));
+        localStorage.setItem(
+          VERSE_META_KEY,
+          JSON.stringify({ updatedAt: toTime(updatedAt) || Date.now() })
+        );
+        return currentVerse;
+      }
+
+      function markLocalSave(updatedAt) {
+        try {
+          sessionStorage.setItem(LOCAL_SAVE_GUARD_KEY, String(updatedAt || Date.now()));
+        } catch {
+          /* ignore */
+        }
+      }
+
+      function isRecentLocalSave(ms) {
+        try {
+          const savedAt = toTime(sessionStorage.getItem(LOCAL_SAVE_GUARD_KEY));
+          return !!(savedAt && Date.now() - savedAt < (ms || 8000));
+        } catch {
+          return false;
+        }
+      }
+
+      function getGunNode() {
+        if (gunNode) return gunNode;
+        if (typeof Gun === "undefined") return null;
+        try {
+          const gun = Gun({ peers: GUN_PEERS, localStorage: false });
+          gunNode = gun.get(APP_ROOT).get("popupVerse");
+          return gunNode;
+        } catch {
+          return null;
+        }
+      }
+
+      function publishVerse(verse, updatedAt) {
+        const node = getGunNode();
+        if (!node || applyingRemote) {
+          return Promise.resolve(false);
+        }
+
+        return new Promise((resolve) => {
+          let settled = false;
+          const finish = (ok) => {
+            if (settled) return;
+            settled = true;
+            resolve(ok);
+          };
+
+          try {
+            node.put(
+              {
+                json: JSON.stringify(verse),
+                updatedAt: updatedAt,
+              },
+              (ack) => finish(!ack || !ack.err)
+            );
+          } catch {
+            finish(false);
+            return;
+          }
+
+          setTimeout(() => finish(true), 1800);
+        });
+      }
+
+      function subscribeSharedVerse() {
+        const node = getGunNode();
+        if (!node) return;
+
+        node.on((data) => {
+          if (isRecentLocalSave(8000)) return;
+          if (!data || typeof data.json !== "string") return;
+
+          const remoteAt = toTime(data.updatedAt);
+          const localAt = toTime(readMeta().updatedAt);
+          if (!remoteAt || remoteAt <= localAt) return;
+
+          let remoteVerse;
+          try {
+            remoteVerse = JSON.parse(data.json);
+          } catch {
+            return;
+          }
+          if (!remoteVerse || typeof remoteVerse !== "object") return;
+
+          applyingRemote = true;
+          try {
+            writeLocal(remoteVerse, remoteAt);
+            renderVerse();
+            if (!editPopup.hidden) {
+              editVerse.value = currentVerse.text;
+              editRef.value = currentVerse.ref;
+            }
+          } finally {
+            applyingRemote = false;
+          }
+        });
+      }
+
+      async function saveVerse(verse) {
+        const updatedAt = Date.now();
+        writeLocal(verse, updatedAt);
+        markLocalSave(updatedAt);
+        renderVerse();
+        return publishVerse(currentVerse, updatedAt);
+      }
+
+      function isLoggedIn() {
+        return sessionStorage.getItem(SESSION_KEY) === "1";
+      }
+
+      function setLoggedIn(value) {
+        if (value) sessionStorage.setItem(SESSION_KEY, "1");
+        else sessionStorage.removeItem(SESSION_KEY);
+      }
+
+      function renderVerse() {
+        verseTextEl.textContent = currentVerse.text;
+        verseRefEl.textContent = currentVerse.ref;
+      }
+
+      function renderAuth() {
+        const loggedIn = isLoggedIn();
+        guestActions.hidden = loggedIn;
+        masterActions.hidden = !loggedIn;
+        popupEditBtn.hidden = !loggedIn;
+      }
+
+      function unlockField(event) {
+        event.currentTarget.removeAttribute("readonly");
+      }
+
+      function openEdit() {
+        editVerse.value = currentVerse.text;
+        editRef.value = currentVerse.ref;
+        editMsg.textContent = "";
+        loginPopup.hidden = true;
+        versePopup.hidden = true;
+        editPopup.hidden = false;
+        editVerse.focus();
+      }
+
+      currentVerse = loadCachedVerse();
+      renderVerse();
+      renderAuth();
+      subscribeSharedVerse();
+
+      amenBtn.addEventListener("click", () => {
+        versePopup.hidden = true;
+      });
+
+      popupEditBtn.addEventListener("click", openEdit);
+      openEditBtn.addEventListener("click", openEdit);
+
+      openLoginBtn.addEventListener("click", () => {
+        loginMsg.textContent = "";
+        loginId.value = "";
+        loginPw.value = "";
+        loginPopup.hidden = false;
+        loginId.focus();
+      });
+
+      loginCancelBtn.addEventListener("click", () => {
+        loginPopup.hidden = true;
+      });
+
+      loginId.addEventListener("focus", unlockField);
+      loginPw.addEventListener("focus", unlockField);
+
+      loginForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const id = loginId.value.trim();
+        const password = loginPw.value;
+
+        if (id === MASTER_ACCOUNT.id && password === MASTER_ACCOUNT.password) {
+          setLoggedIn(true);
+          renderAuth();
+          loginPopup.hidden = true;
+          openEdit();
+          return;
+        }
+
+        loginMsg.textContent = "아이디 또는 비밀번호가 올바르지 않습니다.";
+      });
+
+      logoutBtn.addEventListener("click", () => {
+        setLoggedIn(false);
+        renderAuth();
+        editPopup.hidden = true;
+      });
+
+      editCancelBtn.addEventListener("click", () => {
+        editPopup.hidden = true;
+      });
+
+      editForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const text = editVerse.value.trim();
+        const ref = editRef.value.trim();
+
+        if (!text || !ref) {
+          editMsg.textContent = "말씀과 출처를 모두 입력해 주세요.";
+          return;
+        }
+
+        const saveBtn = editForm.querySelector('button[type="submit"]');
+        saveBtn.disabled = true;
+        editMsg.textContent = "저장 중...";
+
+        const synced = await saveVerse({ text, ref });
+        saveBtn.disabled = false;
+        editMsg.textContent = synced
+          ? "저장되었습니다. 다른 휴대폰에도 동일하게 적용됩니다."
+          : "이 휴대폰에는 저장됐지만, 다른 기기로 보내는 데 실패했습니다. 네트워크를 확인해 주세요.";
+      });
+    </script>
+  </body>
+</html>
