@@ -6,16 +6,18 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#5c1a16" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta name="theme-color" content="#fffaf1" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="성경암송" />
     <meta name="application-name" content="성경암송" />
-    <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
-    <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png" />
+    <link rel="manifest" href="./manifest.webmanifest?v=21" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png?v=21" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png?v=21" />
+    <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png?v=21" />
     <title>성경암송</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" />
     <link
@@ -49,27 +51,15 @@
         padding: 0;
       }
 
-      html {
-        height: 100vh;
-        height: -webkit-fill-available;
-      }
-
       html,
       body {
         width: 100%;
+        height: 100%;
         overflow: hidden;
-        overscroll-behavior: none;
       }
 
       body {
-        position: relative;
-        min-height: 100vh;
-        min-height: -webkit-fill-available;
-        min-height: 100dvh;
-        display: -webkit-flex;
-        display: flex;
-        -webkit-justify-content: center;
-        justify-content: center;
+        margin: 0;
         background: #1a1a1a;
         font-family: var(--font-ui);
         -webkit-font-smoothing: antialiased;
@@ -85,19 +75,30 @@
       .phone {
         width: 100%;
         max-width: var(--phone-max);
-        min-height: 100vh;
-        min-height: -webkit-fill-available;
-        min-height: 100dvh;
+        height: 100%;
+        margin: 0 auto;
         position: relative;
         overflow: hidden;
-        background: linear-gradient(180deg, #7a2a22 0%, var(--wine) 42%, var(--wine-deep) 100%);
-        color: var(--cream);
+        background: var(--paper);
       }
 
-      .home {
-        min-height: 100vh;
-        min-height: -webkit-fill-available;
-        min-height: 100dvh;
+      .screen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .screen[hidden] {
+        display: none !important;
+      }
+
+      #screenVerse {
+        z-index: 5;
+        background: rgba(20, 8, 6, 0.75);
         display: -webkit-flex;
         display: flex;
         -webkit-flex-direction: column;
@@ -106,11 +107,60 @@
         align-items: center;
         -webkit-justify-content: center;
         justify-content: center;
-        padding: 32px 28px 40px;
+        padding: 40px 24px;
         text-align: center;
       }
 
-      .home h1 {
+      .verse-card {
+        width: 100%;
+        max-width: 340px;
+        background: var(--paper);
+        border-radius: 18px;
+        padding: 36px 24px 28px;
+      }
+
+      .verse-text {
+        font-family: var(--font-verse);
+        font-size: 1.12rem;
+        font-weight: 600;
+        line-height: 1.9;
+        color: var(--ink);
+        word-break: keep-all;
+        max-width: 34em;
+      }
+
+      .verse-ref {
+        margin-top: 24px;
+        font-family: var(--font-verse);
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+
+      .verse-actions {
+        width: 100%;
+        max-width: 320px;
+        margin-top: 32px;
+      }
+
+      #screenHome,
+      #screenLogin,
+      #screenEdit {
+        background: linear-gradient(180deg, #7a2a22 0%, var(--wine) 42%, var(--wine-deep) 100%);
+        color: var(--cream);
+        display: -webkit-flex;
+        display: flex;
+        -webkit-flex-direction: column;
+        flex-direction: column;
+        -webkit-align-items: center;
+        align-items: center;
+        -webkit-justify-content: center;
+        justify-content: center;
+        padding: 32px 24px;
+        text-align: center;
+      }
+
+      #screenHome h1,
+      .panel-title {
         font-family: var(--font-verse);
         font-size: 2rem;
         font-weight: 700;
@@ -123,90 +173,32 @@
         opacity: 0.78;
       }
 
-      .home-actions {
-        margin-top: 48px;
-        width: min(100%, 280px);
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
+      .home-actions,
+      .panel {
+        margin-top: 36px;
+        width: 100%;
+        max-width: 320px;
+      }
+
+      .panel {
+        background: var(--paper);
+        color: var(--ink);
+        border-radius: 18px;
+        padding: 28px 22px;
+        text-align: left;
+      }
+
+      .panel-title {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 1.1rem;
+        letter-spacing: 0.06em;
+        text-align: center;
+        color: var(--ink);
       }
 
       .home-actions[hidden] {
         display: none !important;
-      }
-
-      .popup {
-        position: fixed;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        min-height: 100vh;
-        min-height: -webkit-fill-available;
-        z-index: 1000;
-        display: -webkit-flex;
-        display: flex;
-        -webkit-align-items: center;
-        align-items: center;
-        -webkit-justify-content: center;
-        justify-content: center;
-        padding: 24px 18px;
-        background: rgba(20, 8, 6, 0.72);
-        -webkit-overflow-scrolling: touch;
-      }
-
-      #versePopup {
-        z-index: 1100;
-      }
-
-      .popup[hidden] {
-        display: none !important;
-      }
-
-      .popup-backdrop {
-        position: absolute;
-        inset: 0;
-        background: rgba(20, 8, 6, 0.62);
-        backdrop-filter: blur(4px);
-      }
-
-      .popup-panel {
-        position: relative;
-        width: min(100%, 360px);
-        max-height: 90%;
-        overflow-y: auto;
-        padding: 36px 26px 28px;
-        border-radius: 18px;
-        background: var(--paper);
-        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
-        text-align: center;
-        -webkit-overflow-scrolling: touch;
-      }
-
-      .popup-title {
-        margin-bottom: 18px;
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: var(--ink);
-        letter-spacing: 0.06em;
-      }
-
-      .verse-text {
-        font-family: var(--font-verse);
-        font-size: 1.05rem;
-        font-weight: 600;
-        line-height: 1.85;
-        color: var(--ink);
-        word-break: keep-all;
-      }
-
-      .verse-ref {
-        margin-top: 22px;
-        font-family: var(--font-verse);
-        font-size: 0.92rem;
-        color: var(--muted);
       }
 
       .btn {
@@ -222,10 +214,9 @@
       }
 
       .btn-primary {
-        margin-top: 28px;
-        background: linear-gradient(180deg, #b42318 0%, #8e1b14 100%);
+        margin-top: 16px;
+        background: #8e1b14;
         color: #fff;
-        box-shadow: 0 8px 18px rgba(142, 27, 20, 0.28);
       }
 
       .btn-secondary {
@@ -241,13 +232,8 @@
         border: 1px solid rgba(247, 240, 228, 0.35);
       }
 
-      .btn:active {
-        transform: scale(0.98);
-      }
-
       .field {
         margin-top: 14px;
-        text-align: left;
       }
 
       .field label {
@@ -277,127 +263,89 @@
         line-height: 1.7;
       }
 
-      .field input:focus,
-      .field textarea:focus {
-        border-color: #b42318;
-      }
-
       .form-msg {
         min-height: 1.2em;
         margin-top: 10px;
         font-size: 0.85rem;
         color: #b42318;
-      }
-
-      .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
+        text-align: center;
       }
     </style>
   </head>
   <body>
     <div class="phone">
-      <main class="home">
+      <section class="screen" id="screenHome">
         <h1>성경암송</h1>
         <p class="home-sub">말씀을 마음에 새기는 시간</p>
-
         <div class="home-actions" id="guestActions">
           <button type="button" class="btn btn-ghost" id="openLoginBtn">관리자 로그인</button>
         </div>
-
         <div class="home-actions" id="masterActions" hidden>
           <button type="button" class="btn btn-ghost" id="openEditBtn">팝업 말씀 수정</button>
           <button type="button" class="btn btn-ghost" id="logoutBtn">로그아웃</button>
         </div>
-      </main>
-    </div>
+      </section>
 
-      <div
-        class="popup"
-        id="versePopup"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="verseText"
-        style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;background:rgba(20,8,6,0.72);padding:24px 18px;box-sizing:border-box;"
-      >
-        <div class="popup-backdrop" aria-hidden="true"></div>
-        <div class="popup-panel">
+      <section class="screen" id="screenVerse">
+        <div class="verse-card">
           <p class="verse-text" id="verseText">
             내가 너희에게 이르노니 이와 같이 죄인 하나가 회개하면 하늘에서는 회개할 것 없는 의인 아흔 아홉을 인하여 기뻐하는 것보다 더하리라
           </p>
           <p class="verse-ref" id="verseRef">- 누가복음 15장 7절 말씀 -</p>
-          <button type="button" class="btn btn-primary" id="amenBtn">아멘</button>
-          <button type="button" class="btn btn-secondary" id="popupEditBtn">
-            수정
-          </button>
+          <div class="verse-actions">
+            <button type="button" class="btn btn-primary" id="amenBtn">아멘</button>
+            <button type="button" class="btn btn-secondary" id="popupEditBtn">수정</button>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div class="popup" id="loginPopup" hidden role="dialog" aria-modal="true" aria-labelledby="loginTitle">
-        <div class="popup-backdrop" aria-hidden="true"></div>
-        <div class="popup-panel">
-          <h2 class="popup-title" id="loginTitle">마스터 로그인</h2>
-          <form id="loginForm" autocomplete="off">
-            <div class="field">
-              <label for="loginId">아이디</label>
-              <input
-                id="loginId"
-                name="verse-master-id"
-                type="text"
-                inputmode="text"
-                autocomplete="off"
-                autocapitalize="off"
-                autocorrect="off"
-                spellcheck="false"
-                readonly
-              />
-            </div>
-            <div class="field">
-              <label for="loginPw">비밀번호</label>
-              <input
-                id="loginPw"
-                name="verse-master-pw"
-                type="password"
-                autocomplete="new-password"
-                readonly
-              />
-            </div>
-            <p class="form-msg" id="loginMsg" aria-live="polite"></p>
-            <button type="submit" class="btn btn-primary">로그인</button>
-            <button type="button" class="btn btn-secondary" id="loginCancelBtn">취소</button>
-          </form>
-        </div>
-      </div>
+      <section class="screen" id="screenLogin" hidden>
+        <form class="panel" id="loginForm" autocomplete="off">
+          <strong class="panel-title">마스터 로그인</strong>
+          <div class="field">
+            <label for="loginId">아이디</label>
+            <input
+              id="loginId"
+              name="verse-master-id"
+              type="text"
+              inputmode="text"
+              autocomplete="off"
+              autocapitalize="off"
+              autocorrect="off"
+              spellcheck="false"
+              readonly
+            />
+          </div>
+          <div class="field">
+            <label for="loginPw">비밀번호</label>
+            <input id="loginPw" name="verse-master-pw" type="password" autocomplete="new-password" readonly />
+          </div>
+          <p class="form-msg" id="loginMsg"></p>
+          <button type="submit" class="btn btn-primary">로그인</button>
+          <button type="button" class="btn btn-secondary" id="loginCancelBtn">취소</button>
+        </form>
+      </section>
 
-      <div class="popup" id="editPopup" hidden role="dialog" aria-modal="true" aria-labelledby="editTitle">
-        <div class="popup-backdrop" aria-hidden="true"></div>
-        <div class="popup-panel">
-          <h2 class="popup-title" id="editTitle">팝업 말씀 수정</h2>
-          <form id="editForm" autocomplete="off">
-            <div class="field">
-              <label for="editVerse">말씀</label>
-              <textarea id="editVerse" required></textarea>
-            </div>
-            <div class="field">
-              <label for="editRef">출처</label>
-              <input id="editRef" type="text" required />
-            </div>
-            <p class="form-msg" id="editMsg" aria-live="polite"></p>
-            <button type="submit" class="btn btn-primary">저장</button>
-            <button type="button" class="btn btn-secondary" id="editCancelBtn">닫기</button>
-          </form>
-        </div>
-      </div>
+      <section class="screen" id="screenEdit" hidden>
+        <form class="panel" id="editForm" autocomplete="off">
+          <strong class="panel-title">팝업 말씀 수정</strong>
+          <div class="field">
+            <label for="editVerse">말씀</label>
+            <textarea id="editVerse" required></textarea>
+          </div>
+          <div class="field">
+            <label for="editRef">출처</label>
+            <input id="editRef" type="text" required />
+          </div>
+          <p class="form-msg" id="editMsg"></p>
+          <button type="submit" class="btn btn-primary">저장</button>
+          <button type="button" class="btn btn-secondary" id="editCancelBtn">닫기</button>
+        </form>
+      </section>
+    </div>
 
     <script>
-      const MASTER_ACCOUNT = {
-        id: "redwaterdeer",
-        password: "10qp29wo!Q",
-      };
-
+      const MASTER_ACCOUNT = { id: "redwaterdeer", password: "10qp29wo!Q" };
       const VERSE_KEY = "biblePopupVerse";
       const VERSE_META_KEY = "biblePopupVerseMeta";
       const SESSION_KEY = "bibleMasterLoggedIn";
@@ -407,15 +355,15 @@
         "https://gun-manhattan.herokuapp.com/gun",
         "https://peer.wallie.io/gun",
       ];
-
       const DEFAULT_VERSE = {
         text: "내가 너희에게 이르노니 이와 같이 죄인 하나가 회개하면 하늘에서는 회개할 것 없는 의인 아흔 아홉을 인하여 기뻐하는 것보다 더하리라",
         ref: "- 누가복음 15장 7절 말씀 -",
       };
 
-      const versePopup = document.getElementById("versePopup");
-      const loginPopup = document.getElementById("loginPopup");
-      const editPopup = document.getElementById("editPopup");
+      const screenVerse = document.getElementById("screenVerse");
+      const screenHome = document.getElementById("screenHome");
+      const screenLogin = document.getElementById("screenLogin");
+      const screenEdit = document.getElementById("screenEdit");
       const verseTextEl = document.getElementById("verseText");
       const verseRefEl = document.getElementById("verseRef");
       const amenBtn = document.getElementById("amenBtn");
@@ -437,9 +385,10 @@
       const editCancelBtn = document.getElementById("editCancelBtn");
 
       let currentVerse = { ...DEFAULT_VERSE };
+      let currentScreen = "verse";
       let applyingRemote = false;
       let gunNode = null;
-      let loginFromVerse = false;
+      let lastBeat = Date.now();
 
       function toTime(value) {
         const n = Number(value);
@@ -475,10 +424,7 @@
         };
         try {
           localStorage.setItem(VERSE_KEY, JSON.stringify(currentVerse));
-          localStorage.setItem(
-            VERSE_META_KEY,
-            JSON.stringify({ updatedAt: toTime(updatedAt) || Date.now() })
-          );
+          localStorage.setItem(VERSE_META_KEY, JSON.stringify({ updatedAt: toTime(updatedAt) || Date.now() }));
         } catch {
           /* ignore */
         }
@@ -516,10 +462,7 @@
 
       function publishVerse(verse, updatedAt) {
         const node = getGunNode();
-        if (!node || applyingRemote) {
-          return Promise.resolve(false);
-        }
-
+        if (!node || applyingRemote) return Promise.resolve(false);
         return new Promise((resolve) => {
           let settled = false;
           const finish = (ok) => {
@@ -527,49 +470,61 @@
             settled = true;
             resolve(ok);
           };
-
           try {
-            node.put(
-              {
-                json: JSON.stringify(verse),
-                updatedAt: updatedAt,
-              },
-              (ack) => finish(!ack || !ack.err)
-            );
+            node.put({ json: JSON.stringify(verse), updatedAt: updatedAt }, (ack) => finish(!ack || !ack.err));
           } catch {
             finish(false);
             return;
           }
-
           setTimeout(() => finish(true), 1800);
         });
+      }
+
+      function renderVerse() {
+        verseTextEl.textContent = currentVerse.text;
+        verseRefEl.textContent = currentVerse.ref;
+      }
+
+      function showScreen(name) {
+        currentScreen = name;
+        screenVerse.hidden = name !== "verse";
+        screenLogin.hidden = name !== "login";
+        screenEdit.hidden = name !== "edit";
+        screenHome.hidden = false;
+      }
+
+      function showVerseScreen() {
+        try {
+          currentVerse = loadCachedVerse();
+          renderVerse();
+        } catch {
+          currentVerse = { ...DEFAULT_VERSE };
+          renderVerse();
+        }
+        showScreen("verse");
+      }
+
+      function onAppWake() {
+        if (currentScreen === "login" || currentScreen === "edit") return;
+        showVerseScreen();
       }
 
       function subscribeSharedVerse() {
         const node = getGunNode();
         if (!node) return;
-
         node.on((data) => {
           try {
             if (isRecentLocalSave(8000)) return;
             if (!data || typeof data.json !== "string") return;
-
             const remoteAt = toTime(data.updatedAt);
             const localAt = toTime(readMeta().updatedAt);
             if (!remoteAt || remoteAt <= localAt) return;
-
-            let remoteVerse;
-            try {
-              remoteVerse = JSON.parse(data.json);
-            } catch {
-              return;
-            }
+            const remoteVerse = JSON.parse(data.json);
             if (!remoteVerse || typeof remoteVerse !== "object") return;
-
             applyingRemote = true;
             writeLocal(remoteVerse, remoteAt);
             renderVerse();
-            if (!editPopup.hidden) {
+            if (currentScreen === "edit") {
               editVerse.value = currentVerse.text;
               editRef.value = currentVerse.ref;
             }
@@ -606,25 +561,10 @@
         }
       }
 
-      function renderVerse() {
-        verseTextEl.textContent = currentVerse.text;
-        verseRefEl.textContent = currentVerse.ref;
-      }
-
       function renderAuth() {
         const loggedIn = isLoggedIn();
         guestActions.hidden = loggedIn;
         masterActions.hidden = !loggedIn;
-      }
-
-      function openLogin(fromVerse) {
-        loginFromVerse = !!fromVerse;
-        loginMsg.textContent = "";
-        loginId.value = "";
-        loginPw.value = "";
-        if (fromVerse) hideVersePopup();
-        loginPopup.hidden = false;
-        loginId.focus();
       }
 
       function unlockField(event) {
@@ -635,74 +575,8 @@
         editVerse.value = currentVerse.text;
         editRef.value = currentVerse.ref;
         editMsg.textContent = "";
-        loginPopup.hidden = true;
-        hideVersePopup();
-        editPopup.hidden = false;
+        showScreen("edit");
         editVerse.focus();
-      }
-
-      let lastHeartbeat = Date.now();
-      let lastRaf = Date.now();
-      let rafReady = false;
-      let screenWasLocked = false;
-      let lastHidden = !!(document.hidden || document.webkitHidden);
-
-      function isHomeScreen() {
-        return editPopup.hidden && loginPopup.hidden;
-      }
-
-      const VERSE_POPUP_STYLE =
-        "position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;background:rgba(20,8,6,0.72);padding:24px 18px;box-sizing:border-box;";
-
-      function showVersePopup() {
-        if (!isHomeScreen()) return;
-        try {
-          currentVerse = loadCachedVerse();
-          renderVerse();
-        } catch {
-          currentVerse = { ...DEFAULT_VERSE };
-          verseTextEl.textContent = currentVerse.text;
-          verseRefEl.textContent = currentVerse.ref;
-        }
-        versePopup.removeAttribute("hidden");
-        versePopup.hidden = false;
-        versePopup.style.cssText = VERSE_POPUP_STYLE;
-      }
-
-      function hideVersePopup() {
-        versePopup.hidden = true;
-        versePopup.setAttribute("hidden", "");
-        versePopup.style.display = "none";
-      }
-
-      function showHomeScreen() {
-        loginPopup.hidden = true;
-        editPopup.hidden = true;
-        showVersePopup();
-      }
-
-      function onAppWake() {
-        showHomeScreen();
-      }
-
-      function watchRaf() {
-        const now = Date.now();
-        if (rafReady && now - lastRaf > 700) onAppWake();
-        rafReady = true;
-        lastRaf = now;
-        requestAnimationFrame(watchRaf);
-      }
-
-      async function probeScreenLock() {
-        if (!navigator.wakeLock || typeof navigator.wakeLock.request !== "function") return;
-        try {
-          const lock = await navigator.wakeLock.request("screen");
-          if (screenWasLocked) onAppWake();
-          screenWasLocked = false;
-          if (lock && lock.release) await lock.release();
-        } catch {
-          screenWasLocked = true;
-        }
       }
 
       function loadGunAndSync() {
@@ -714,11 +588,10 @@
           }
           return;
         }
-
         const script = document.createElement("script");
         script.src = "https://cdn.jsdelivr.net/npm/gun/gun.js";
         script.async = true;
-        script.onload = () => {
+        script.onload = function () {
           try {
             subscribeSharedVerse();
           } catch {
@@ -728,7 +601,9 @@
         document.head.appendChild(script);
       }
 
-      showHomeScreen();
+      currentVerse = loadCachedVerse();
+      renderVerse();
+      showVerseScreen();
       try {
         renderAuth();
       } catch {
@@ -736,113 +611,67 @@
       }
 
       window.addEventListener("pageshow", onAppWake);
-      window.addEventListener("load", onAppWake);
       window.addEventListener("focus", onAppWake);
-      window.addEventListener("blur", () => {
-        lastHeartbeat = 0;
-        lastRaf = 0;
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden) onAppWake();
       });
-      window.addEventListener("pagehide", () => {
-        lastHeartbeat = 0;
-        lastRaf = 0;
-      });
-      document.addEventListener("visibilitychange", () => {
-        const hidden = document.hidden;
-        if (lastHidden && !hidden) onAppWake();
-        if (!hidden) onAppWake();
-        lastHidden = hidden;
-        if (hidden) {
-          lastHeartbeat = 0;
-          lastRaf = 0;
-        }
-      });
-      document.addEventListener("webkitvisibilitychange", () => {
-        if (document.webkitVisibilityState === "visible") onAppWake();
-        else {
-          lastHeartbeat = 0;
-          lastRaf = 0;
-        }
-      });
-      document.addEventListener("resume", onAppWake);
-      document.addEventListener("freeze", () => {
-        lastHeartbeat = 0;
-        lastRaf = 0;
-      });
-
-      requestAnimationFrame(watchRaf);
-
-      setInterval(() => {
+      setInterval(function () {
         const now = Date.now();
-        const hidden = !!(document.hidden || document.webkitHidden);
-        if (lastHidden && !hidden) onAppWake();
-        lastHidden = hidden;
-
-        const gap = now - lastHeartbeat;
-        lastHeartbeat = now;
-        if (gap > 700) onAppWake();
-
-        probeScreenLock();
-      }, 400);
-
+        if (now - lastBeat > 1200) onAppWake();
+        lastBeat = now;
+      }, 500);
       setTimeout(loadGunAndSync, 0);
 
-      amenBtn.addEventListener("click", () => {
-        hideVersePopup();
+      amenBtn.addEventListener("click", function () {
+        screenVerse.hidden = true;
+        currentScreen = "home";
       });
-
-      popupEditBtn.addEventListener("click", () => openLogin(true));
+      popupEditBtn.addEventListener("click", function () {
+        loginMsg.textContent = "";
+        loginId.value = "";
+        loginPw.value = "";
+        showScreen("login");
+        loginId.focus();
+      });
+      openLoginBtn.addEventListener("click", function () {
+        loginMsg.textContent = "";
+        loginId.value = "";
+        loginPw.value = "";
+        showScreen("login");
+        loginId.focus();
+      });
       openEditBtn.addEventListener("click", openEdit);
-
-      openLoginBtn.addEventListener("click", () => openLogin(false));
-
-      loginCancelBtn.addEventListener("click", () => {
-        showHomeScreen();
+      loginCancelBtn.addEventListener("click", showVerseScreen);
+      logoutBtn.addEventListener("click", function () {
+        setLoggedIn(false);
+        renderAuth();
+        showVerseScreen();
       });
-
+      editCancelBtn.addEventListener("click", showVerseScreen);
       loginId.addEventListener("focus", unlockField);
       loginPw.addEventListener("focus", unlockField);
-
-      loginForm.addEventListener("submit", (event) => {
+      loginForm.addEventListener("submit", function (event) {
         event.preventDefault();
-        const id = loginId.value.trim();
-        const password = loginPw.value;
-
-        if (id === MASTER_ACCOUNT.id && password === MASTER_ACCOUNT.password) {
+        if (loginId.value.trim() === MASTER_ACCOUNT.id && loginPw.value === MASTER_ACCOUNT.password) {
           setLoggedIn(true);
           renderAuth();
-          loginPopup.hidden = true;
           openEdit();
           return;
         }
-
         loginMsg.textContent = "아이디 또는 비밀번호가 올바르지 않습니다.";
       });
-
-      logoutBtn.addEventListener("click", () => {
-        setLoggedIn(false);
-        renderAuth();
-        showHomeScreen();
-      });
-
-      editCancelBtn.addEventListener("click", () => {
-        showHomeScreen();
-      });
-
-      editForm.addEventListener("submit", async (event) => {
+      editForm.addEventListener("submit", async function (event) {
         event.preventDefault();
         const text = editVerse.value.trim();
         const ref = editRef.value.trim();
-
         if (!text || !ref) {
           editMsg.textContent = "말씀과 출처를 모두 입력해 주세요.";
           return;
         }
-
         const saveBtn = editForm.querySelector('button[type="submit"]');
         saveBtn.disabled = true;
         editMsg.textContent = "저장 중...";
-
-        const synced = await saveVerse({ text, ref });
+        const synced = await saveVerse({ text: text, ref: ref });
         saveBtn.disabled = false;
         editMsg.textContent = synced
           ? "저장되었습니다. 다른 휴대폰에도 동일하게 적용됩니다."
