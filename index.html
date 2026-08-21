@@ -14,10 +14,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="성경암송" />
     <meta name="application-name" content="성경암송" />
-    <link rel="manifest" href="./manifest.webmanifest?v=21" />
-    <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png?v=21" />
-    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png?v=21" />
-    <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png?v=21" />
+    <link rel="manifest" href="./manifest.webmanifest?v=22" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png?v=22" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png?v=22" />
+    <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png?v=22" />
     <title>성경암송</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" />
     <link
@@ -99,8 +99,6 @@
       #screenVerse {
         z-index: 5;
         background: rgba(20, 8, 6, 0.75);
-        display: -webkit-flex;
-        display: flex;
         -webkit-flex-direction: column;
         flex-direction: column;
         -webkit-align-items: center;
@@ -109,6 +107,11 @@
         justify-content: center;
         padding: 40px 24px;
         text-align: center;
+      }
+
+      #screenVerse:not([hidden]) {
+        display: -webkit-flex !important;
+        display: flex !important;
       }
 
       .verse-card {
@@ -286,7 +289,7 @@
         </div>
       </section>
 
-      <section class="screen" id="screenVerse">
+      <section class="screen" id="screenVerse" hidden>
         <div class="verse-card">
           <p class="verse-text" id="verseText">
             내가 너희에게 이르노니 이와 같이 죄인 하나가 회개하면 하늘에서는 회개할 것 없는 의인 아흔 아홉을 인하여 기뻐하는 것보다 더하리라
@@ -385,10 +388,12 @@
       const editCancelBtn = document.getElementById("editCancelBtn");
 
       let currentVerse = { ...DEFAULT_VERSE };
-      let currentScreen = "verse";
+      let currentScreen = "home";
       let applyingRemote = false;
       let gunNode = null;
-      let lastBeat = Date.now();
+      let lastTick = Date.now();
+      const startedAt = Date.now();
+      let wasHidden = document.hidden === true || document.webkitHidden === true;
 
       function toTime(value) {
         const n = Number(value);
@@ -493,6 +498,11 @@
         screenHome.hidden = false;
       }
 
+      function showHome() {
+        showScreen("home");
+        screenVerse.hidden = true;
+      }
+
       function showVerseScreen() {
         try {
           currentVerse = loadCachedVerse();
@@ -504,8 +514,14 @@
         showScreen("verse");
       }
 
-      function onAppWake() {
+      function isPageHidden() {
+        return document.hidden === true || document.webkitHidden === true;
+      }
+
+      function onLockUnlock() {
+        if (Date.now() - startedAt < 2500) return;
         if (currentScreen === "login" || currentScreen === "edit") return;
+        if (currentScreen !== "home") return;
         showVerseScreen();
       }
 
@@ -603,28 +619,47 @@
 
       currentVerse = loadCachedVerse();
       renderVerse();
-      showVerseScreen();
+      showHome();
       try {
         renderAuth();
       } catch {
         /* ignore */
       }
 
-      window.addEventListener("pageshow", onAppWake);
-      window.addEventListener("focus", onAppWake);
       document.addEventListener("visibilitychange", function () {
-        if (!document.hidden) onAppWake();
+        const hidden = isPageHidden();
+        if (hidden) {
+          wasHidden = true;
+          return;
+        }
+        if (wasHidden) {
+          wasHidden = false;
+          onLockUnlock();
+        }
       });
-      setInterval(function () {
+      document.addEventListener("webkitvisibilitychange", function () {
+        const hidden = isPageHidden();
+        if (hidden) {
+          wasHidden = true;
+          return;
+        }
+        if (wasHidden) {
+          wasHidden = false;
+          onLockUnlock();
+        }
+      });
+
+      function watchFreeze() {
         const now = Date.now();
-        if (now - lastBeat > 1200) onAppWake();
-        lastBeat = now;
-      }, 500);
+        if (now - lastTick > 1500) onLockUnlock();
+        lastTick = now;
+        requestAnimationFrame(watchFreeze);
+      }
+      requestAnimationFrame(watchFreeze);
       setTimeout(loadGunAndSync, 0);
 
       amenBtn.addEventListener("click", function () {
-        screenVerse.hidden = true;
-        currentScreen = "home";
+        showHome();
       });
       popupEditBtn.addEventListener("click", function () {
         loginMsg.textContent = "";
@@ -641,13 +676,13 @@
         loginId.focus();
       });
       openEditBtn.addEventListener("click", openEdit);
-      loginCancelBtn.addEventListener("click", showVerseScreen);
+      loginCancelBtn.addEventListener("click", showHome);
       logoutBtn.addEventListener("click", function () {
         setLoggedIn(false);
         renderAuth();
-        showVerseScreen();
+        showHome();
       });
-      editCancelBtn.addEventListener("click", showVerseScreen);
+      editCancelBtn.addEventListener("click", showHome);
       loginId.addEventListener("focus", unlockField);
       loginPw.addEventListener("focus", unlockField);
       loginForm.addEventListener("submit", function (event) {
