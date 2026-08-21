@@ -394,6 +394,16 @@
       let lastTick = Date.now();
       let freezeReady = false;
 
+      function isShortcutPopup() {
+        var from = "";
+        try {
+          from = new URLSearchParams(location.search).get("from") || "";
+        } catch {
+          from = "";
+        }
+        return from === "kakaotalk" || from === "youtube" || from === "shortcut";
+      }
+
       function toTime(value) {
         const n = Number(value);
         return Number.isFinite(n) && n > 0 ? n : 0;
@@ -512,10 +522,30 @@
           renderVerse();
         }
         showScreen("verse");
+        if (isShortcutPopup()) screenHome.hidden = true;
         screenVerse.removeAttribute("hidden");
         screenVerse.style.display = "-webkit-flex";
         screenVerse.style.display = "flex";
         screenVerse.style.zIndex = "9999";
+      }
+
+      function closeShortcutWindow() {
+        var from = "";
+        try {
+          from = new URLSearchParams(location.search).get("from") || "";
+        } catch {
+          from = "";
+        }
+        window.close();
+        setTimeout(function () {
+          if (from === "kakaotalk") {
+            location.replace("kakaotalk://");
+          } else if (from === "youtube") {
+            location.replace("youtube://");
+          } else {
+            history.back();
+          }
+        }, 80);
       }
 
       const UNLOCK_KEY = "bibleShowVerseOnReturn";
@@ -639,46 +669,58 @@
 
       currentVerse = loadCachedVerse();
       renderVerse();
-      showHome();
       try {
         renderAuth();
       } catch {
         /* ignore */
       }
 
+      if (isShortcutPopup()) {
+        popupEditBtn.hidden = true;
+        showVerseScreen();
+      } else {
+        showHome();
+      }
+
       function isPageHidden() {
         return document.hidden === true || document.webkitHidden === true;
       }
 
-      window.addEventListener("pagehide", markLeftApp);
-      window.addEventListener("blur", markLeftApp);
-      window.addEventListener("freeze", markLeftApp);
-      document.addEventListener("visibilitychange", function () {
-        if (isPageHidden()) markLeftApp();
-        else showVerseAfterUnlock();
-      });
-      document.addEventListener("webkitvisibilitychange", function () {
-        if (isPageHidden()) markLeftApp();
-        else showVerseAfterUnlock();
-      });
-      window.addEventListener("pageshow", showVerseAfterUnlock);
-      window.addEventListener("focus", showVerseAfterUnlock);
-      document.addEventListener("resume", showVerseAfterUnlock);
+      if (!isShortcutPopup()) {
+        window.addEventListener("pagehide", markLeftApp);
+        window.addEventListener("blur", markLeftApp);
+        window.addEventListener("freeze", markLeftApp);
+        document.addEventListener("visibilitychange", function () {
+          if (isPageHidden()) markLeftApp();
+          else showVerseAfterUnlock();
+        });
+        document.addEventListener("webkitvisibilitychange", function () {
+          if (isPageHidden()) markLeftApp();
+          else showVerseAfterUnlock();
+        });
+        window.addEventListener("pageshow", showVerseAfterUnlock);
+        window.addEventListener("focus", showVerseAfterUnlock);
+        document.addEventListener("resume", showVerseAfterUnlock);
 
-      function watchFreeze() {
-        var now = Date.now();
-        if (freezeReady && now - lastTick > 2000) {
-          markLeftApp();
-          showVerseAfterUnlock();
+        function watchFreeze() {
+          var now = Date.now();
+          if (freezeReady && now - lastTick > 2000) {
+            markLeftApp();
+            showVerseAfterUnlock();
+          }
+          freezeReady = true;
+          lastTick = now;
+          requestAnimationFrame(watchFreeze);
         }
-        freezeReady = true;
-        lastTick = now;
         requestAnimationFrame(watchFreeze);
       }
-      requestAnimationFrame(watchFreeze);
       setTimeout(loadGunAndSync, 0);
 
       amenBtn.addEventListener("click", function () {
+        if (isShortcutPopup()) {
+          closeShortcutWindow();
+          return;
+        }
         showHome();
       });
       popupEditBtn.addEventListener("click", function () {
