@@ -140,11 +140,16 @@
         padding: 24px 18px;
       }
 
-      #versePopup {
-        z-index: 50;
+      #versePopup.is-open,
+      #versePopup:not([hidden]) {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: flex !important;
       }
 
-      .popup[hidden] {
+      .popup[hidden],
+      #versePopup[hidden] {
         display: none !important;
       }
 
@@ -298,7 +303,7 @@
       </main>
 
       <div
-        class="popup"
+        class="popup is-open"
         id="versePopup"
         role="dialog"
         aria-modal="true"
@@ -618,17 +623,20 @@
         editRef.value = currentVerse.ref;
         editMsg.textContent = "";
         loginPopup.hidden = true;
-        versePopup.hidden = true;
+        hideVersePopup(true);
         editPopup.hidden = false;
         editVerse.focus();
       }
 
       let dismissedAt = 0;
+      let lastHeartbeat = Date.now();
 
-      function showVersePopup(force) {
-        const forced = force === true || (force && (force.type === "pageshow" || force.type === "load"));
-        if (!editPopup.hidden || !loginPopup.hidden) return;
-        if (!forced && !versePopup.hidden) return;
+      function isHomeScreen() {
+        return editPopup.hidden && loginPopup.hidden;
+      }
+
+      function showVersePopup() {
+        if (!isHomeScreen()) return;
         try {
           currentVerse = loadCachedVerse();
           renderVerse();
@@ -638,13 +646,21 @@
           verseRefEl.textContent = currentVerse.ref;
         }
         versePopup.hidden = false;
+        versePopup.classList.add("is-open");
+        versePopup.style.display = "flex";
       }
 
-      function resumeVersePopup() {
-        if (document.visibilityState && document.visibilityState !== "visible") return;
-        if (!editPopup.hidden || !loginPopup.hidden) return;
-        if (Date.now() - dismissedAt < 800) return;
-        showVersePopup(true);
+      function hideVersePopup(silent) {
+        if (!silent) dismissedAt = Date.now();
+        versePopup.hidden = true;
+        versePopup.classList.remove("is-open");
+        versePopup.style.display = "none";
+      }
+
+      function showHomeScreen() {
+        loginPopup.hidden = true;
+        editPopup.hidden = true;
+        showVersePopup();
       }
 
       function loadGunAndSync() {
@@ -670,21 +686,43 @@
         document.head.appendChild(script);
       }
 
-      showVersePopup(true);
+      showHomeScreen();
       try {
         renderAuth();
       } catch {
         /* ignore */
       }
-      window.addEventListener("pageshow", () => showVersePopup(true));
-      window.addEventListener("load", () => showVersePopup(true));
-      window.addEventListener("focus", resumeVersePopup);
-      document.addEventListener("visibilitychange", resumeVersePopup);
+
+      window.addEventListener("pageshow", showHomeScreen);
+      window.addEventListener("load", showHomeScreen);
+      window.addEventListener("focus", showHomeScreen);
+      window.addEventListener("pagehide", () => {
+        lastHeartbeat = 0;
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") showHomeScreen();
+        else lastHeartbeat = 0;
+      });
+      document.addEventListener("webkitvisibilitychange", () => {
+        if (document.webkitVisibilityState === "visible") showHomeScreen();
+        else lastHeartbeat = 0;
+      });
+      document.addEventListener("resume", showHomeScreen);
+      document.addEventListener("freeze", () => {
+        lastHeartbeat = 0;
+      });
+
+      setInterval(() => {
+        const now = Date.now();
+        const gap = now - lastHeartbeat;
+        lastHeartbeat = now;
+        if (gap > 1500 && isHomeScreen()) showHomeScreen();
+      }, 400);
+
       setTimeout(loadGunAndSync, 0);
 
       amenBtn.addEventListener("click", () => {
-        dismissedAt = Date.now();
-        versePopup.hidden = true;
+        hideVersePopup();
       });
 
       popupEditBtn.addEventListener("click", () => openLogin(true));
@@ -693,8 +731,7 @@
       openLoginBtn.addEventListener("click", () => openLogin(false));
 
       loginCancelBtn.addEventListener("click", () => {
-        loginPopup.hidden = true;
-        if (loginFromVerse) versePopup.hidden = false;
+        showHomeScreen();
       });
 
       loginId.addEventListener("focus", unlockField);
@@ -719,12 +756,11 @@
       logoutBtn.addEventListener("click", () => {
         setLoggedIn(false);
         renderAuth();
-        editPopup.hidden = true;
+        showHomeScreen();
       });
 
       editCancelBtn.addEventListener("click", () => {
-        editPopup.hidden = true;
-        showVersePopup(true);
+        showHomeScreen();
       });
 
       editForm.addEventListener("submit", async (event) => {
