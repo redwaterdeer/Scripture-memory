@@ -556,12 +556,6 @@
       }
 
       function closeShortcutWindow() {
-        var from = "";
-        try {
-          from = new URLSearchParams(location.search).get("from") || "";
-        } catch {
-          from = "";
-        }
         try {
           window.open("", "_self");
           window.close();
@@ -574,16 +568,8 @@
           } catch {
             /* ignore */
           }
-          if (from === "kakaotalk") {
-            location.replace("kakaotalk://");
-            return;
-          }
-          if (from === "youtube") {
-            location.replace("youtube://");
-            return;
-          }
           location.replace("about:blank");
-        }, 50);
+        }, 0);
       }
 
       const UNLOCK_KEY = "bibleShowVerseOnReturn";
